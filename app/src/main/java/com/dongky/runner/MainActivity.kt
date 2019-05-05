@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         const val REQUEST_PERMISSION_ACCESS_FINE_LOCATION: Int = 5001
     }
-    val TAG: String = MainActivity.javaClass.simpleName
+    private val TAG: String = MainActivity.javaClass.simpleName
 
 
     private val locationManager: LocationManager by lazy {
@@ -43,6 +43,12 @@ class MainActivity : AppCompatActivity() {
         fabPlay.setOnClickListener { view ->
             isRunning = !isRunning
 
+            if (isRunning) {
+                startLocationService()
+            } else {
+                stopLocationService()
+            }
+
             updateFabPlayColor(isRunning)
             updateFabPlayImage(isRunning)
 
@@ -57,18 +63,28 @@ class MainActivity : AppCompatActivity() {
         if (!checkPermission()) return
 
         Log.d(TAG, "LocationService granted!")
+    }
+
+    private fun startLocationService() {
+        if (!checkPermission()) return
+
         val isGpsEnable = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         val isNetworkEnable = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 
         Log.d(TAG, "isGpsEnable : $isGpsEnable")
         Log.d(TAG, "isNetworkEnable : $isNetworkEnable")
 
-        if (isGpsEnable) locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 100f, locationListener)
-        if (isNetworkEnable) locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 100f, locationListener)
+        if (isGpsEnable) locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 10f, locationListener)
+        if (isNetworkEnable) locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 10f, locationListener)
+    }
+
+    private fun stopLocationService() {
+        locationManager.removeUpdates(locationListener)
     }
 
     private val locationListener: LocationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
+            Log.d(TAG, "onLocationChanged")
             tvGpsInfo.text = "LATITUDE : ${location.latitude}\nLONGITUDE : ${location.longitude}\nSPEED : ${location.speed}"
         }
 
